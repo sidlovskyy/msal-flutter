@@ -4,7 +4,6 @@ import android.app.Activity
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import androidx.annotation.WorkerThread
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
@@ -13,8 +12,6 @@ import io.flutter.plugin.common.PluginRegistry.Registrar
 import com.microsoft.identity.client.*
 import com.microsoft.identity.client.exception.MsalException
 import com.microsoft.identity.client.IPublicClientApplication
-import com.microsoft.identity.client.PublicClientApplicationConfigurationFactory.initializeConfiguration
-
 
 @Suppress("SpellCheckingInspection")
 class MsalFlutterPlugin: MethodCallHandler {
@@ -88,6 +85,7 @@ class MsalFlutterPlugin: MethodCallHandler {
         val scopes: Array<String>? = scopesArg?.toTypedArray()
         val clientId : String? = call.argument("clientId")
         val authority : String? = call.argument("authority")
+        val redirectUrl : String? = call.argument("redirectUrl")
 
         Log.d("MsalFlutter","Got scopes: $scopes")
         Log.d("MsalFlutter","Got cleintId: $clientId")
@@ -95,7 +93,7 @@ class MsalFlutterPlugin: MethodCallHandler {
 
         when(call.method){
             "logout" -> Thread(Runnable{logout(result)}).start()
-            "initialize" -> initialize(clientId, authority, result)
+            "initialize" -> initialize(clientId, authority, redirectUrl, result)
             "acquireToken" -> Thread(Runnable {acquireToken(scopes, result)}).start()
             "acquireTokenSilent" -> Thread(Runnable {acquireTokenSilent(scopes, result)}).start()
             else -> result.notImplemented()
@@ -168,12 +166,19 @@ class MsalFlutterPlugin: MethodCallHandler {
         }
     }
 
-    private fun initialize(clientId: String?, authority: String?, result: Result)
+    private fun initialize(clientId: String?, authority: String?, redirectUrl: String?, result: Result)
     {
         //ensure clientid provided
         if(clientId == null){
             Log.d("MsalFlutter","error no clientId")
             result.error("NO_CLIENTID", "Call must include a clientId", null)
+            return
+        }
+
+        //ensure redirectUrl provided
+        if(redirectUrl == null){
+            Log.d("MsalFlutter","error no redirectUrl")
+            result.error("NO_REDIRECT_URL", "Call must include a redirectUrl", null)
             return
         }
 
@@ -188,15 +193,8 @@ class MsalFlutterPlugin: MethodCallHandler {
             }
         }
 
-        // if authority is set, create client using it, otherwise use default
-        if(authority != null){
-            Log.d("MsalFlutter", "Authority not null")
-            Log.d("MsalFlutter", "Creating with: $clientId - $authority")
-            PublicClientApplication.create(mainActivity.applicationContext, clientId, authority, getApplicationCreatedListener(result))
-        }else{
-            Log.d("MsalFlutter", "Authority null")
-            PublicClientApplication.create(mainActivity.applicationContext, clientId, getApplicationCreatedListener(result))
-        }
+        Log.d("MsalFlutter", "Creating with: $clientId - $authority)")
+        PublicClientApplication.create(mainActivity.applicationContext, clientId, authority, redirectUrl, getApplicationCreatedListener(result))
     }
 
 
