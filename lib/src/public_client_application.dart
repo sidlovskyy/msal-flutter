@@ -6,7 +6,7 @@ import 'msal_exception.dart';
 class PublicClientApplication {
   static const MethodChannel _channel = const MethodChannel('msal_flutter');
 
-  String _clientId, _authority, _redirectUrl;
+  String _clientId, _authority, _redirectUrl, _configPath;
 
   /// Create a new PublicClientApplication authenticating as the given [clientId],
   /// optionally against the selected [authority], defaulting to the common
@@ -15,16 +15,21 @@ class PublicClientApplication {
         "Direct call is no longer supported in v1.0, please use static method createPublicClientApplication");
   }
 
-  PublicClientApplication._create(String clientId, {String authority, String redirectUrl}) {
+  PublicClientApplication._create(String clientId, {String authority, String redirectUrl, String configPath}) {
     _clientId = clientId;
     _authority = authority;
     _redirectUrl = redirectUrl;
+    _configPath = configPath;
   }
 
-  static Future<PublicClientApplication> createPublicClientApplication(
-      String clientId,
-      {String authority, String redirectUrl}) async {
-    var res = PublicClientApplication._create(clientId, authority: authority, redirectUrl: redirectUrl);
+  static Future<PublicClientApplication> createPublicClientApplication(String clientId,
+      {String authority, String redirectUrl, String configPath}) async {
+    var res = PublicClientApplication._create(
+      clientId,
+      authority: authority,
+      redirectUrl: redirectUrl,
+      configPath: configPath,
+    );
     await res._initialize();
     return res;
   }
@@ -50,8 +55,7 @@ class PublicClientApplication {
 
     //call platform
     try {
-      final String token =
-          await _channel.invokeMethod('acquireTokenSilent', res);
+      final String token = await _channel.invokeMethod('acquireTokenSilent', res);
       return token;
     } on PlatformException catch (e) {
       throw _convertException(e);
@@ -81,8 +85,7 @@ class PublicClientApplication {
       case "INVALID_AUTHORITY":
         return MsalInvalidConfigurationException("Invalid authroity set.");
       case "CONFIG_ERROR":
-        return MsalInvalidConfigurationException(
-            "Invalid configuration, please correct your settings and try again");
+        return MsalInvalidConfigurationException("Invalid configuration, please correct your settings and try again");
       case "NO_CLIENT":
         return MsalUninitializedException();
       case "CHANGED_CLIENTID":
@@ -105,6 +108,10 @@ class PublicClientApplication {
     //if redirect url has been set, add it aswell
     if (this._redirectUrl != null) {
       res["redirectUrl"] = this._redirectUrl;
+    }
+
+    if (this._configPath != null) {
+      res["configPath"] = this._configPath;
     }
 
     try {
