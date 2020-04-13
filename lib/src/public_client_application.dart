@@ -6,18 +6,19 @@ import 'msal_exception.dart';
 class PublicClientApplication {
   static const MethodChannel _channel = const MethodChannel('msal_flutter');
 
-  String _clientId, _authority;
+  String _clientId, _authority, _redirectUrl;
 
   /// Create a new PublicClientApplication authenticating as the given [clientId],
   /// optionally against the selected [authority], defaulting to the common
-  PublicClientApplication(String clientId, {String authority}) {
+  PublicClientApplication(String clientId, {String authority, String redirectUrl}) {
     throw Exception(
         "Direct call is no longer supported in v1.0, please use static method createPublicClientApplication");
   }
 
-  PublicClientApplication._create(String clientId, {String authority}) {
+  PublicClientApplication._create(String clientId, {String authority, String redirectUrl}) {
     _clientId = clientId;
     _authority = authority;
+    _redirectUrl = redirectUrl;
   }
 
   static Future<PublicClientApplication> createPublicClientApplication(
@@ -75,6 +76,8 @@ class PublicClientApplication {
         return MsalNoAccountException();
       case "NO_CLIENTID":
         return MsalInvalidConfigurationException("Client Id not set");
+      case "NO_REDIRECT_URL":
+        return MsalInvalidConfigurationException("Redirect url not set");
       case "INVALID_AUTHORITY":
         return MsalInvalidConfigurationException("Invalid authroity set.");
       case "CONFIG_ERROR":
@@ -98,6 +101,10 @@ class PublicClientApplication {
     //if authority has been set, add it aswell
     if (this._authority != null) {
       res["authority"] = this._authority;
+    }
+    //if redirect url has been set, add it aswell
+    if (this._redirectUrl != null) {
+      res["redirectUrl"] = this._redirectUrl;
     }
 
     try {
