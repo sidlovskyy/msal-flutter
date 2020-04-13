@@ -13,21 +13,24 @@ import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.Registrar
 import java.io.File
 
+
 @Suppress("SpellCheckingInspection")
 class MsalFlutterPlugin: MethodCallHandler {
     companion object
     {
         lateinit var mainActivity : Activity
         lateinit var msalApp: IMultipleAccountPublicClientApplication
+        lateinit var registrar: Registrar
 
         fun isClientInitialized() = ::msalApp.isInitialized
 
         @JvmStatic
-        fun registerWith(registrar: Registrar) {
+        fun registerWith(reg: Registrar) {
             Log.d("MsalFlutter","Registering plugin")
-            val channel = MethodChannel(registrar.messenger(), "msal_flutter")
+            val channel = MethodChannel(reg.messenger(), "msal_flutter")
             channel.setMethodCallHandler(MsalFlutterPlugin())
-            mainActivity = registrar.activity()
+            mainActivity = reg.activity()
+            registrar = reg
         }
 
         fun getAuthCallback(result: Result) : AuthenticationCallback
@@ -195,7 +198,9 @@ class MsalFlutterPlugin: MethodCallHandler {
 
         if (configPath != null) {
             Log.d("MsalFlutter", "Creating with config: $configPath")
-            val configFile = File(configPath);
+            val key = registrar.lookupKeyForAsset(configPath)
+            Log.d("MsalFlutter", "Creating with file: $key")
+            val configFile = File(key);
             PublicClientApplication.create(mainActivity.applicationContext, configFile, getApplicationCreatedListener(result))
         } else {
             Log.d("MsalFlutter", "Creating with: $clientId - $authority, redirect: $redirectUrl)")
