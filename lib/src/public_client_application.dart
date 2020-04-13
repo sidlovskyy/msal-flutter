@@ -23,8 +23,8 @@ class PublicClientApplication {
 
   static Future<PublicClientApplication> createPublicClientApplication(
       String clientId,
-      {String authority}) async {
-    var res = PublicClientApplication._create(clientId, authority: authority);
+      {String authority, String redirectUrl}) async {
+    var res = PublicClientApplication._create(clientId, authority: authority, redirectUrl: redirectUrl);
     await res._initialize();
     return res;
   }
