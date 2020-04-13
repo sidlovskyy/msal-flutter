@@ -72,7 +72,7 @@ class MsalFlutterPlugin: MethodCallHandler {
                 }
 
                 override fun onError(exception: MsalException?) {
-                    Log.d("MsalFlutter", "Initialize error")
+                    Log.d("MsalFlutter", "Initialize error: ${exception?.message}")
                     result.error("INIT_ERROR", "Error initializting client", exception?.localizedMessage)
                 }
             }
@@ -193,7 +193,7 @@ class MsalFlutterPlugin: MethodCallHandler {
             }
         }
 
-        Log.d("MsalFlutter", "Creating with: $clientId - $authority)")
+        Log.d("MsalFlutter", "Creating with: $clientId - $authority, redirect: $redirectUrl)")
         PublicClientApplication.create(mainActivity.applicationContext, clientId, authority, redirectUrl, getApplicationCreatedListener(result))
     }
 
