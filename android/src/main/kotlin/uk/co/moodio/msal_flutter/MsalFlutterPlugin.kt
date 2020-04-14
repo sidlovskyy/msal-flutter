@@ -41,7 +41,7 @@ class MsalFlutterPlugin: MethodCallHandler {
                 override fun onSuccess(authenticationResult : IAuthenticationResult){
                     Log.d("MsalFlutter", "Authentication successful")
                     Handler(Looper.getMainLooper()).post {
-                        result.success(authenticationResult.account.idToken)
+                        result.success(authenticationResult.account.id)
                     }
                 }
 
